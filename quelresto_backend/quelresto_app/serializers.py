@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from quelresto_app.models import RestoModel, TirageModel, SelectionModel
+from quelresto_app.models import RestoModel, TirageModel, SelectionModel, ParticipantModel
 
 
 class RestoSerializer(serializers.ModelSerializer):
@@ -9,13 +9,17 @@ class RestoSerializer(serializers.ModelSerializer):
         fields = ('id', 'nom')
 
 
+class ParticipantSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = ParticipantModel
+        fields = ('uuid', 'nom',)
+
+
 class MesSelectionsListSerializer(serializers.ListSerializer):
     def to_representation(self, data):
-        user = self.context['request'].user
-        if user.is_anonymous():
-            return []
-        else:
-            data = data.filter(user=self.context['request'].user)
+        data = data.filter(participant=self.context['request'].participant)
         return super(MesSelectionsListSerializer, self).to_representation(data)
 
 
@@ -30,35 +34,36 @@ class SelectionSerializer(serializers.ModelSerializer):
 
 class TirageEnCoursSerializer(serializers.ModelSerializer):
     etat = serializers.ReadOnlyField()
-    master = serializers.ReadOnlyField(source='master.username')
+    master = serializers.ReadOnlyField(source='master.nom')
     participants = serializers.SerializerMethodField()
     selections = SelectionSerializer(many=True)
+    uuid = serializers.UUIDField(read_only=True)
 
     def get_participants(self, value):
-        votants = SelectionModel.objects.filter(tirage=value).values_list('user__username', flat=True)
+        votants = SelectionModel.objects.filter(tirage=value).values_list('participant__nom', flat=True)
         # Grace au set(), on supprime les doublons
         return set(votants)
 
     def create(self, validated_data):
         request = self.context['request']
         tirage = TirageModel()
-        tirage.master = request.user
+        tirage.master = request.participant
         tirage.save()
         return tirage
 
     def update(self, instance, validated_data):
         request = self.context['request']
         # Effacer toutes les sélections préexistants pour cet utilisateur
-        SelectionModel.objects.filter(tirage=instance, user=request.user).delete()
+        SelectionModel.objects.filter(tirage=instance, participant=request.participant).delete()
         # Create selection instances that are in the request
         for item in validated_data['selections']:
-            selection = SelectionModel(nom=item['nom'], user=request.user, tirage=instance)
+            selection = SelectionModel(nom=item['nom'], participant=request.participant, tirage=instance)
             selection.save()
         return instance
 
     class Meta:
         model = TirageModel
-        fields = ('id', 'etat', 'master', 'participants', 'selections')
+        fields = ('uuid', 'etat', 'master', 'participants', 'selections')
 
 
 class StatistiquesField(serializers.Field):
@@ -72,9 +77,9 @@ class StatistiquesField(serializers.Field):
         total = 0
         for sel in selections:
             total += 1
-            if sel.user.username not in by_user:
-                by_user[sel.user.username] = []
-            by_user[sel.user.username].append(sel.nom)
+            if sel.participant.nom not in by_user:
+                by_user[sel.participant.nom] = []
+            by_user[sel.participant.nom].append(sel.nom)
             if sel.nom not in by_nom:
                 by_nom[sel.nom] = 0
             by_nom[sel.nom] += 1
@@ -83,12 +88,13 @@ class StatistiquesField(serializers.Field):
 
 
 class TirageTermineSerializer(serializers.ModelSerializer):
+    uuid = serializers.UUIDField(read_only=True)
     choix = serializers.CharField(read_only=True)
     statistiques = StatistiquesField(read_only=True)
 
     class Meta:
         model = TirageModel
-        fields = ('id', 'etat', 'choix', 'statistiques')
+        fields = ('uuid', 'etat', 'choix', 'statistiques')
 
 
 

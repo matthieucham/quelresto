@@ -1,8 +1,8 @@
 import random
 from rest_framework import generics, viewsets
 from rest_framework.decorators import detail_route
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from quelresto_app import models, serializers, permissions
 
@@ -15,6 +15,7 @@ class RestoList(generics.ListAPIView):
     """
     queryset = models.RestoModel.objects.all()
     serializer_class = serializers.RestoSerializer
+    permission_classes = [AllowAny]
 
 
 class TirageInit(generics.CreateAPIView):
@@ -25,7 +26,16 @@ class TirageInit(generics.CreateAPIView):
     serializer_class = serializers.TirageEnCoursSerializer
 
     def perform_create(self, serializer):
-        serializer.save(master=self.request.user)
+        serializer.save(master=self.request.participant)
+
+
+class ParticipantDetail(viewsets.ModelViewSet):
+    """
+    Crée un participant
+    """
+    queryset = models.ParticipantModel.objects.all()
+    serializer_class = serializers.ParticipantSerializer
+    lookup_field = 'uuid'
 
 
 class TirageDetail(viewsets.ModelViewSet):
@@ -33,12 +43,13 @@ class TirageDetail(viewsets.ModelViewSet):
     Donne les détails du tirage en cours.
     """
     queryset = models.TirageModel.objects.all()
-    permission_classes = [permissions.IsMasterOrNoShuffle, IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsMasterOrNoShuffle, permissions.IsRecognized]
+    lookup_field = 'uuid'
 
     def get_serializer_class(self):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get('uuid')
         # Selon l'état du tirage, on serialise différemment
-        tirage = models.TirageModel.objects.get(pk=pk)
+        tirage = models.TirageModel.objects.get(uuid=pk)
         if tirage.etat == 'OPEN':
             return serializers.TirageEnCoursSerializer
         elif tirage.etat == 'CLOSE':
@@ -47,8 +58,8 @@ class TirageDetail(viewsets.ModelViewSet):
             raise RuntimeError('Le tirage %s est dans un état inconnu.' % pk)
 
     @detail_route(methods=['POST'])
-    def shuffle(self, request, pk=None):
-        tirage = models.TirageModel.objects.get(pk=pk)
+    def shuffle(self, request, uuid=None):
+        tirage = models.TirageModel.objects.get(uuid=uuid)
         self.check_object_permissions(request, tirage)
         assert tirage.etat == 'OPEN', 'Le tirage a déjà eu lieu'
         # Tirer au sort parmi tous les choix

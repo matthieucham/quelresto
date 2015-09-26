@@ -11,5 +11,13 @@ class IsMasterOrNoShuffle(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.path.endswith('shuffle') or request.path.endswith('shuffle/'):
-            return obj.master == request.user
+            return obj.master == request.participant
         return True
+
+
+class IsRecognized(permissions.BasePermission):
+    """
+    Custom permission to ensure that the participant request object has been set.
+    """
+    def has_permission(self, request, view):
+        return request.participant is not None

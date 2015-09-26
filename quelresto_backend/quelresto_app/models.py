@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+import uuid
 
 
 # Create your models here.
@@ -10,6 +10,16 @@ class RestoModel(models.Model):
         return self.nom
 
 
+class ParticipantModel(models.Model):
+    nom = models.CharField(max_length=50)
+    uuid = models.UUIDField(unique=True)
+
+    def save(self, *args, **kwargs):
+        if not self.uuid:
+            self.uuid = uuid.uuid4()
+        super(ParticipantModel, self).save(*args, **kwargs)
+
+
 class TirageModel(models.Model):
     ETATS = (
         ('OPEN', 'En cours'),
@@ -17,12 +27,14 @@ class TirageModel(models.Model):
     )
     etat = models.CharField(max_length=5, choices=ETATS)
     choix = models.CharField(max_length=100, null=True, blank=True)
-    master = models.ForeignKey(User)
+    master = models.ForeignKey(ParticipantModel)
+    uuid = models.UUIDField(unique=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.etat = 'OPEN'
             self.choix = None
+            self.uuid = uuid.uuid4()
         super(TirageModel, self).save(*args, **kwargs)
 
     def terminer(self, choix):
@@ -32,9 +44,10 @@ class TirageModel(models.Model):
 
 
 class SelectionModel(models.Model):
-    user = models.ForeignKey(User)
+    participant = models.ForeignKey(ParticipantModel)
     tirage = models.ForeignKey(TirageModel, related_name='selections')
     nom = models.CharField(max_length=100)
 
     class Meta:
-        unique_together = ('user', 'tirage', 'nom')
+        unique_together = ('participant', 'tirage', 'nom')
+
