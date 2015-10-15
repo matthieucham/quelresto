@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html class="default">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+    <title>SEPAmail</title>
+    <meta name="author" content="Lyra, contact@lyra-network.com">
+    <meta name="description" content="SEPAmail">
+    <meta name="keywords" content="SEPAmail, modern, flat, responsive">
+    <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- build:template
+    <link rel="apple-touch-icon" sizes="57x57" href="<%= urlPrefix %>/favicons/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="<%= urlPrefix %>/favicons/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="<%= urlPrefix %>/favicons/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="<%= urlPrefix %>/favicons/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="<%= urlPrefix %>/favicons/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="<%= urlPrefix %>/favicons/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="<%= urlPrefix %>/favicons/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="<%= urlPrefix %>/favicons/apple-touch-icon-152x152.png">
+    <link rel="icon" type="image/png" href="<%= urlPrefix %>/favicons/favicon-196x196.png" sizes="196x196">
+    <link rel="icon" type="image/png" href="<%= urlPrefix %>/favicons/favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="<%= urlPrefix %>/favicons/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="<%= urlPrefix %>/favicons/favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="<%= urlPrefix %>/favicons/favicon-32x32.png" sizes="32x32">
+    /build -->
+    <meta name="msapplication-TileColor" content="#E76049">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    <meta name="application-name" content="SEPAmail">
+
+    <!-- CSS import -->
+    <!-- build:template
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/messenger.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/messenger-spinner.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/messenger-theme-flat.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/jquery-ui/jquery-ui.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/bootstrap-switch.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/font-awesome.css">
+    <link media="screen,print" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/app/blessed/main.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/app/blessed/common.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/app/blessed/theme.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/app/blessed/colors.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="<%= urlPrefix %>/css/app/blessed/font-faces.css">
+    /build -->
+</head>
+<!-- build:template
+<body data-version="<%= appVersion %>">
+/build -->
+    <div id="app-container"></div>
+    <div id="modal-container"></div>
+
+    <!-- Global vars -->
+    <!-- build:template
+    <script>
+        (function () {
+            window.restUri = '<%= restUri %>';
+            window.urlPrefix = '<%= urlPrefix %>';
+            window.currentLanguage = localStorage.getItem('selectedLocale') || '<%= defaultLanguage %>';
+        })();
+    </script>
+    /build -->
+
+    <!-- Imports -->
+    <!-- build:template
+    <script type="text/javascript" src="<%= urlPrefix %>/js/polyfill.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/modernizr.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/eventemitter2.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/jquery.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/jquery-ui.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/jquery.validate.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/jquery.cookie.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/bootstrap.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/bootstrap-switch.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/messenger.js"></script>
+    <script type="text/javascript" src="<%= urlPrefix %>/js/moment.js"></script>
+    <script>moment.locale(window.currentLanguage);</script>
+
+    <script type="text/javascript" src="<%= urlPrefix %>/js/app.js"></script>
+    /build -->
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+#newCreditor {
+    textarea {
+        height: 83px;
+        resize: none;
+    }
+
+    #userList {
+        .panel-body:not(.empty) {
+            padding: 0 15px;
+        }
+
+        
+        .user {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .user:last-child {
+            border-bottom: 0;
+        }
+    }
+
+    #offerList {
+        .account:not(:last-child) {
+            margin-bottom: 15px;
+        }
+    }
+}
+
+#creditors {
+    .siret {
+        min-width: 85px;
+    }
+}

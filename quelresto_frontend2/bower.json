@@ -1,0 +1,22 @@
+{
+  "name": "sepamail-rubis-admin-bo",
+  "version": "0.0.0",
+  "dependencies": {
+    "bootstrap": "~3.3.3",
+    "dropzone": "~4.0.1",
+    "eventemitter2": "~0.4.14",
+    "ion.rangeSlider": "~2.0.4",
+    "jquery": "~1.11.3",
+    "jquery-ui": "~1.11.3",
+    "jquery-validate": "~1.13.1",
+    "jquery-cookie": "~1.4.1",
+    "messenger": "1.4.1",
+    "modernizr": "~2.8.3",
+    "perfect-scrollbar": "~0.5.9",
+    "polyfills": "~0.1.0",
+    "switchery": "~0.7.0",
+    "typeahead.js": "~0.10.5",
+    "validate": "~0.7.1",
+    "bootbox": "4.4.0"
+  }
+}

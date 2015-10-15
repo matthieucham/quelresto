@@ -1,0 +1,25 @@
+@import "../../../../../node_modules/sepamail-common/resources/variables";
+
+$icon-font-path: '../../../font/bootstrap/';
+// only for glyphicon
+
+// 25/14
+// ~25px
+
+
+$font-family-sans-serif: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+$headings-font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+
+$logo_background: url('../../../imgs/logo_bnp.png');
+
+$zindex-tooltip: 999999999999999999999999999;
+
+$sidebar_width: 225px;
+$brand-color: #1cb08c;
+$active-link-brand-color: #1cb072;
+
+/* CUSTOM bootstrap */ 
+$nav-pills-border-radius: 0px;
+$nav-pills-active-link-hover-bg: black;
+
+$input-border-focus: $brand-color;

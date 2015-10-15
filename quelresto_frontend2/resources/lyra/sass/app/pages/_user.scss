@@ -1,0 +1,20 @@
+.switch-rights {
+    .bootstrap-switch {
+        margin-bottom: 15px;
+    }
+}
+
+.permission-title {
+    color: $brand-color;
+    font-size: 18px;
+}
+
+.permissions {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+
+    &:last-child {
+        margin-bottom: 0;
+        border: none;
+    }
+}

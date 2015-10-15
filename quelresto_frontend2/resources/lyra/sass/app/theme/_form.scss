@@ -1,0 +1,34 @@
+form {
+    label {
+        color: $brand-color;
+        font-weight: bold;
+
+        + input[type="checkbox"],
+        + .bootstrap-switch {
+            margin-left: 14px;
+            font-weight: bold;
+            vertical-align: bottom;
+        }
+    }
+
+    .no-margin {
+        .form-group {
+            margin: 0;
+        }
+    }
+}
+
+.ui-datepicker .ui-datepicker-title {
+    select {
+        font-weight: normal;
+        color: rgb(51, 51, 51);
+
+        + select {
+            margin-left: 8px;
+        }
+    }
+
+    .checkbox-view {
+        vertical-align: 0;
+    }
+}
