@@ -1,18 +1,11 @@
 {
-  "name": "sepamail-management-frontend",
-  "version": "0.8.0-SNAPSHOT",
-  "description": "SEPAmail management BO",
+  "name": "quelresto-frontend",
+  "version": "0.0.1",
+  "description": "Quelresto Frontend",
   "author": {
-    "name": "Lyra Network"
+    "name": "Matthieu Grandrie"
   },
   "repository": "",
-  "publishConfig": {
-    "registry": "https://nexus.lbg.office.lyra/content/repositories/npm-internal/"
-  },
-  "copyright": "Lyra",
-  "keywords": [
-    "sepamail-bo"
-  ],
   "dependencies": {
     "bootstrap-sass": "~3.3.5",
     "bootstrap-switch": "~3.3.2",
@@ -30,11 +23,8 @@
     "react-intl": "~1.2.0",
     "react-router": "~0.13.3",
     "restful.js": "~0.7.0",
-    "sepamail-common": "~1.0.0",
     "socket.io-client": "~1.3.5",
-    "url-parse": "~1.0.1",
-    "webuibusinessutils": "0.0.7",
-    "webuiutils": "0.0.8"
+    "url-parse": "~1.0.1"
   },
   "devDependencies": {
     "autoprefixer-core": "~5.2.1",

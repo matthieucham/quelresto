@@ -1,6 +1,6 @@
 {
-  "name": "sepamail-rubis-admin-bo",
-  "version": "0.0.0",
+  "name": "quelresto-frontend",
+  "version": "0.0.1",
   "dependencies": {
     "bootstrap": "~3.3.3",
     "dropzone": "~4.0.1",
