@@ -1,0 +1,61 @@
+{% extends 'djfrontend/skeleton.html' %}
+
+{% load staticfiles %}
+{% load djfrontend %}
+
+{% block head_css %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'quelresto_frontend/css/style.css' %}"/>
+{% endblock %}
+
+{% block head_js %}
+{{ block.super }}
+<script src="{% static 'quelresto_frontend/js/libs/js.cookie.js' %}"></script>
+{% endblock %}
+
+
+{% block body_content %}
+
+{% block navbar %}
+<nav class="navbar navbar-inverse">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <p id="p-name" class="navbar-brand">Bonjour, <strong>Luc</strong></p>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a id="a-logout" href="#">Je ne suis pas Luc</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock navbar %}
+
+{% block top_content %}
+{% endblock top_content %}
+
+<div class="container">
+    {% block container_content %}
+
+    {% endblock container_content %}
+    <hr>
+    {% block footer %}
+    <footer>
+        <p>&copy; Matthieu. Leave Django alone !</p>
+    </footer>
+    {% endblock footer %}
+</div>
+{% endblock body_content %}
+
+{% block body_js %}
+    {{ block.super }}
+    {% block quelresto_body_js %}
+    {% endblock %}
+{% endblock %}

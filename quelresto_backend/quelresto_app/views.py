@@ -1,8 +1,9 @@
 import random
+
 from rest_framework import generics, viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from quelresto_app import models, serializers, permissions
 
@@ -33,9 +34,13 @@ class ParticipantDetail(viewsets.ModelViewSet):
     """
     Crée un participant
     """
+    permission_classes = [AllowAny]
     queryset = models.ParticipantModel.objects.all()
     serializer_class = serializers.ParticipantSerializer
     lookup_field = 'uuid'
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 class TirageDetail(viewsets.ModelViewSet):

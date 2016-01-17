@@ -12,6 +12,12 @@ class RestoSerializer(serializers.ModelSerializer):
 class ParticipantSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
 
+    def create(self, validated_data):
+        participant = ParticipantModel()
+        participant.nom = validated_data['nom']
+        participant.save()
+        return participant
+
     class Meta:
         model = ParticipantModel
         fields = ('uuid', 'nom',)
@@ -45,9 +51,8 @@ class TirageEnCoursSerializer(serializers.ModelSerializer):
         return set(votants)
 
     def create(self, validated_data):
-        request = self.context['request']
         tirage = TirageModel()
-        tirage.master = request.participant
+        tirage.master = validated_data['master']
         tirage.save()
         return tirage
 

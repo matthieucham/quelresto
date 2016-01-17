@@ -1,9 +1,0 @@
-{
-    "https": true,
-    "port": 443,
-    "host": "nexus.lbg.office.lyra",
-    "auth": {
-        "username": "deployment",
-        "password": "deploy"
-    }
-}
