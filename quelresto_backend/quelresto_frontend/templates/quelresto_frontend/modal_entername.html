@@ -1,0 +1,15 @@
+{% extends 'quelresto_frontend/base_modal.html' %}
+
+{% block modal_title %}Enchanté{% endblock %}
+
+{% block modal_body %}
+<div class="form-group">
+  <label for="fld-username">Pour participer, il me faut un nom :</label>
+  <input type="text" class="form-control" id="fld-username">
+</div>
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button id="btn-save-name" type="button" class="btn btn-primary" disabled>Enregistrer</button>
+{% endblock %}

@@ -5,18 +5,37 @@ $(function(){
 	/*********************************/
 	$('#btn-start-resto').click(function() {startResto()});
 
+	$('#fld-username').change(function() {
+	    if ($( this ).val().length > 0) {
+	        $('#btn-save-name').prop('disabled', false);
+	    } else {
+	        $('#btn-save-name').prop('disabled', true);
+	    }
+	});
+
+	$('#btn-save-name').click(function() {
+	    createParticipant($('#fld-username').val())
+	});
+
+	$('#a-logout').click(function() {
+	    Cookies.remove('participant');
+	    fetchParticipant();
+	});
+
     fetchParticipant();
 });
 
 function startResto() {
     console.log('startResto');
     // vérifie si on a un cookie, si non on en créera un.
-    makeMyCookie();
+    var pUuid = Cookies.get('participant');
+    if (pUuid == null) {
+        makeMyCookie();
+    }
     //$.post('rest/tirages/', function() {log('chargé')}, 'json');
 }
 
 function fetchParticipant() {
-    console.log('zob');
     // Recherche le cookie nommé "participant".
     // Si trouvé et toujours valide => rien à faire
     // Sinon, appeler le service rest participants pour initialiser un nouveau cookie de participation.
@@ -24,11 +43,10 @@ function fetchParticipant() {
     if (pUuid == null) {
         $('nav.navbar').hide();
     } else {
-        console.log('hoho');
-        $('#p-name').text("ZARMA");
         // GET participant with that cookie
         $.get("rest/participants/"+pUuid, function(resp){
                 $('#p-name').text("Bonjour "+resp.nom+". Il est ").append("<span id='time'></div>").append(" Bientôt l'heure de manger !");
+                $('#a-logout').text("Je ne suis pas "+resp.nom);
                 $('nav.navbar').show();
                 startTime();
              }, 'json');
@@ -36,11 +54,15 @@ function fetchParticipant() {
 }
 
 function makeMyCookie() {
-    // TODO modale pour saisir le nom
-    $.post('rest/participants/', {'nom': 'César'}, function(resp) {
+    $('#enterName').modal('show');
+}
+
+function createParticipant(name) {
+    $.post('rest/participants/', {'nom': name}, function(resp) {
         Cookies.set('participant', resp.uuid);
         fetchParticipant();
     }, 'json')
+    $('#enterName').modal('hide');
 }
 
 function checkTime(i) {
