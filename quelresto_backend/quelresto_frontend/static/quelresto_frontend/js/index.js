@@ -13,10 +13,6 @@ $(function(){
 	    }
 	});
 
-	$('#btn-save-name').click(function() {
-	    createParticipant($('#fld-username').val())
-	});
-
 	$('#a-logout').click(function() {
 	    Cookies.remove('participant');
 	    fetchParticipant();
@@ -30,9 +26,13 @@ function startResto() {
     // vérifie si on a un cookie, si non on en créera un.
     var pUuid = Cookies.get('participant');
     if (pUuid == null) {
-        makeMyCookie();
+        $('#enterName').modal('show');
+        $('#btn-save-name').click(function() {
+	        createParticipant($('#fld-username').val(), true);
+	    });
+    } else {
+        launchTirage();
     }
-    //$.post('rest/tirages/', function() {log('chargé')}, 'json');
 }
 
 function fetchParticipant() {
@@ -53,14 +53,24 @@ function fetchParticipant() {
     }
 }
 
-function makeMyCookie() {
-    $('#enterName').modal('show');
+function launchTirage() {
+    // Créer nouveau tirage
+    $.post('rest/tirages/', function(resp) {
+        var tirageUuid = resp.uuid;
+        // Redirect to tirage.html
+        window.location.href = "tirage/"+tirageUuid;
+    }, 'json');
 }
 
-function createParticipant(name) {
+function createParticipant(name, startTirage) {
     $.post('rest/participants/', {'nom': name}, function(resp) {
-        Cookies.set('participant', resp.uuid);
+        Cookies.set('participant', resp.uuid, { expires: 30 });
         fetchParticipant();
+        if (startTirage) {
+            launchTirage();
+        } else {
+            // Rejoindre un tirage
+        }
     }, 'json')
     $('#enterName').modal('hide');
 }

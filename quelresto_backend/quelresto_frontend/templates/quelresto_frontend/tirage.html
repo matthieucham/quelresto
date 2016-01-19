@@ -1,0 +1,17 @@
+{% extends 'quelresto_frontend/base.html' %}
+
+{% load static %}
+
+{% block container_content %}
+    <div class="row">
+       <div class="col-md-12 bg-primary">
+           <h1 id="h-title"></h1>
+       </div>
+    </div>
+    <input id="tid" type="hidden" value="{{ tid }}"/>
+    <p>Liste des restos</p>
+{% endblock container_content %}
+
+{% block quelresto_body_js %}
+     <script src="{% static 'quelresto_frontend/js/tirage.js' %}"></script>
+{% endblock %}
