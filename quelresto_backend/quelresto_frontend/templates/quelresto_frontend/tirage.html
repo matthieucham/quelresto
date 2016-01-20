@@ -3,15 +3,21 @@
 {% load static %}
 
 {% block container_content %}
-    <div class="row">
-       <div class="col-md-12 bg-primary">
-           <h1 id="h-title"></h1>
-       </div>
+<input id="tid" type="hidden" value="{{ tid }}"/>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">Sélection des restos</div>
+            <div class="panel-body">
+                <div id="group-restos" class="container-fluid">
+                </div>
+            </div>
+        </div>
     </div>
-    <input id="tid" type="hidden" value="{{ tid }}"/>
-    <p>Liste des restos</p>
+</div>
 {% endblock container_content %}
 
 {% block quelresto_body_js %}
-     <script src="{% static 'quelresto_frontend/js/tirage.js' %}"></script>
+<script src="{% static 'quelresto_frontend/js/tirage.js' %}"></script>
 {% endblock %}
