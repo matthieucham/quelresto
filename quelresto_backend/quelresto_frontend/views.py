@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from quelresto_app.models import TirageModel
 
 
 def index(request):
@@ -8,4 +9,8 @@ def index(request):
 
 def tirage(request, uuid):
     context = {"tid": uuid}
-    return render(request, 'quelresto_frontend/tirage.html', context)
+    ti = get_object_or_404(TirageModel, uuid=uuid)
+    if ti.etat == 'OPEN':
+        return render(request, 'quelresto_frontend/tirage.html', context)
+    else:
+        return render(request, 'quelresto_frontend/resultat.html', context)
