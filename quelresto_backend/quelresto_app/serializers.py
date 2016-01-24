@@ -41,6 +41,7 @@ class SelectionSerializer(serializers.ModelSerializer):
 class TirageEnCoursSerializer(serializers.ModelSerializer):
     etat = serializers.ReadOnlyField()
     master = serializers.ReadOnlyField(source='master.nom')
+    master_uuid = serializers.ReadOnlyField(source='master.uuid')
     participants = serializers.SerializerMethodField()
     selections = SelectionSerializer(many=True)
     uuid = serializers.UUIDField(read_only=True)
@@ -68,7 +69,7 @@ class TirageEnCoursSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TirageModel
-        fields = ('uuid', 'etat', 'master', 'participants', 'selections')
+        fields = ('uuid', 'etat', 'master', 'master_uuid', 'participants', 'selections')
 
 
 class StatistiquesField(serializers.Field):

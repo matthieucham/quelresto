@@ -14,7 +14,13 @@ $(function() {
 
     function updateTirage(resp) {
         tirage = resp;
-        $('#p-name').text(tirage.uuid+"   Tirage initié par "+tirage.master);
+        $('#p-name').text(tirage.uuid);
+        $('#a-logout').text("Tirage initié par "+tirage.master);
+        if (tirage.master_uuid == Cookies.get('participant')) {
+            $('#pn-shuffle').show()
+        } else {
+            $('#pn-shuffle').hide()
+        }
     }
 
     function makeRestosList(data) {

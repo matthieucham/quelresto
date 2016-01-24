@@ -14,7 +14,7 @@ class RestoList(generics.ListAPIView):
     """
     Liste les restos
     """
-    queryset = models.RestoModel.objects.all()
+    queryset = models.RestoModel.objects.all().order_by('nom')
     serializer_class = serializers.RestoSerializer
     permission_classes = [AllowAny]
 
