@@ -55,15 +55,35 @@ function fetchParticipant() {
 
 function launchTirage() {
     // Créer nouveau tirage
-    $.post('rest/tirages/', function(resp) {
+    $.ajax({
+      url: 'rest/tirages/',
+      type: "POST",
+      dataType: "json", // expected format for response
+      contentType: "application/json", // send as JSON
+      //data: $.param( $("Element or Expression") ),
+      success: function() {
         var tirageUuid = resp.uuid;
         // Redirect to tirage.html
         window.location.href = "tirage/"+tirageUuid;
-    }, 'json');
+      },
+    });
+
+
+    /*$.post('rest/tirages/', function(resp) {
+        var tirageUuid = resp.uuid;
+        // Redirect to tirage.html
+        window.location.href = "tirage/"+tirageUuid;
+    }, 'json');*/
 }
 
 function createParticipant(name, startTirage) {
-    $.post('rest/participants/', {'nom': name}, function(resp) {
+    $.ajax({
+      url: 'rest/participants/',
+      type: "POST",
+      dataType: "json", // expected format for response
+      contentType: "application/json", // send as JSON
+      data: $.param( {'nom': name} ),
+      success: function() {
         Cookies.set('participant', resp.uuid, { expires: 30 });
         fetchParticipant();
         if (startTirage) {
@@ -71,7 +91,18 @@ function createParticipant(name, startTirage) {
         } else {
             // Rejoindre un tirage
         }
-    }, 'json')
+      },
+    });
+
+//    $.post('rest/participants/', {'nom': name}, function(resp) {
+//        Cookies.set('participant', resp.uuid, { expires: 30 });
+//        fetchParticipant();
+//        if (startTirage) {
+//            launchTirage();
+//        } else {
+//            // Rejoindre un tirage
+//        }
+//    }, 'json')
     $('#enterName').modal('hide');
 }
 

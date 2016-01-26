@@ -21,6 +21,22 @@ $(function() {
         } else {
             $('#pn-shuffle').hide()
         }
+        // activer les boutons selectionnés
+        tirage.selections.forEach( function(sel) {
+            var name = sel.nom;
+            // Find button with name as value
+            if ($('#group-restos button:contains("'+name+'")').length > 0) {
+                $('#group-restos button:contains("'+name+'")').addClass("active");
+            } else {
+                // C'est la suggestion supplémentaire
+                $('#inputlg').val(name);
+            }
+        });
+
+        tirage.participants.forEach( function(part) {
+            $('#participants').empty();
+            $('#participants').append('<li>'+part+' a voté</li>');
+        });
     }
 
     function makeRestosList(data) {
@@ -46,6 +62,31 @@ $(function() {
             sel.push(choice);
         }
         // Envoi au serveur
-        $.post('../../rest/tirages/'+tirage.uuid+'/', JSON.stringify({"selections" : sel}), updateTirage, 'json');
+        //$.post('../../rest/tirages/'+tirage.uuid+'/', {selections: JSON.stringify(sel)}, updateTirage, 'json');
+        $.ajax({
+          url: '../../rest/tirages/'+tirage.uuid+'/',
+          type: "POST",
+          dataType: "json", // expected format for response
+          contentType: "application/json", // send as JSON
+          data: JSON.stringify({"selections": sel}),
+          success: function(resp) {
+            $.notify({
+                // options
+                message: 'Sélection enregistrée'
+                },{
+                    // settings
+                    type: 'success'
+                });
+            updateTirage(resp);
+          },
+          error: function(resp) {
+            $.notify({
+                message: 'Echec ! La sélection n\'a pas pu être enregistrée''
+                },{
+                    type: 'danger'
+                });
+            updateTirage(resp);
+          },
+        });
     }
 })
