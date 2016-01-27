@@ -61,19 +61,12 @@ function launchTirage() {
       dataType: "json", // expected format for response
       contentType: "application/json", // send as JSON
       //data: $.param( $("Element or Expression") ),
-      success: function() {
+      success: function(resp) {
         var tirageUuid = resp.uuid;
         // Redirect to tirage.html
         window.location.href = "tirage/"+tirageUuid;
       },
     });
-
-
-    /*$.post('rest/tirages/', function(resp) {
-        var tirageUuid = resp.uuid;
-        // Redirect to tirage.html
-        window.location.href = "tirage/"+tirageUuid;
-    }, 'json');*/
 }
 
 function createParticipant(name, startTirage) {
@@ -82,8 +75,8 @@ function createParticipant(name, startTirage) {
       type: "POST",
       dataType: "json", // expected format for response
       contentType: "application/json", // send as JSON
-      data: $.param( {'nom': name} ),
-      success: function() {
+      data: JSON.stringify( {'nom': name} ),
+      success: function(resp) {
         Cookies.set('participant', resp.uuid, { expires: 30 });
         fetchParticipant();
         if (startTirage) {
@@ -93,16 +86,6 @@ function createParticipant(name, startTirage) {
         }
       },
     });
-
-//    $.post('rest/participants/', {'nom': name}, function(resp) {
-//        Cookies.set('participant', resp.uuid, { expires: 30 });
-//        fetchParticipant();
-//        if (startTirage) {
-//            launchTirage();
-//        } else {
-//            // Rejoindre un tirage
-//        }
-//    }, 'json')
     $('#enterName').modal('hide');
 }
 

@@ -4,12 +4,19 @@ body {
 
 .jumbotron {
     margin-bottom: 0px;
-    background-image: url(../images/jakarta_blur.jpg);
     background-position: 0% 25%;
     background-size: cover;
     background-repeat: no-repeat;
     color: white;
     text-shadow: black 0.3em 0.3em 0.3em;
+}
+
+.jumbotron#index_jumbo {
+    background-image: url(../images/jakarta_blur.jpg);
+}
+
+.jumbotron#resultat_jumbo {
+    background-image: url(../images/jakarta_blur.jpg);
 }
 
 #group-restos button{

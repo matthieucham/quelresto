@@ -3,6 +3,7 @@ $(function() {
 
     // Récup infos tirage
     var tirage;
+    var registeredParticipants = [];
 
     $.get('../../rest/restos/', function(resp) {
         makeRestosList(resp);
@@ -32,11 +33,15 @@ $(function() {
                 $('#inputlg').val(name);
             }
         });
-
+        registeredParticipants = [];
+        $('#participants').empty();
         tirage.participants.forEach( function(part) {
-            $('#participants').empty();
             $('#participants').append('<li>'+part+' a voté</li>');
+            registeredParticipants.push(part);
         });
+        if (resp.etat == 'CLOSE') {
+            window.location.href = "../../resultat/"+resp.uuid+'/';
+        }
     }
 
     function makeRestosList(data) {
@@ -53,16 +58,13 @@ $(function() {
         var sel = [];
         $('#group-restos button.active').each(function(){
             var choice = {"nom": $( this ).text() };
-            //choice['nom'] = $( this ).text();
             sel.push(choice);
         })
         if ($('#inputlg').val().length > 0) {
             var choice = {"nom": $('#inputlg').val()};
-            //choice['nom'] = $('#inputlg').val();
             sel.push(choice);
         }
         // Envoi au serveur
-        //$.post('../../rest/tirages/'+tirage.uuid+'/', {selections: JSON.stringify(sel)}, updateTirage, 'json');
         $.ajax({
           url: '../../rest/tirages/'+tirage.uuid+'/',
           type: "POST",
@@ -71,21 +73,56 @@ $(function() {
           data: JSON.stringify({"selections": sel}),
           success: function(resp) {
             $.notify({
-                // options
                 message: 'Sélection enregistrée'
                 },{
-                    // settings
                     type: 'success'
                 });
             updateTirage(resp);
           },
           error: function(resp) {
             $.notify({
-                message: 'Echec ! La sélection n\'a pas pu être enregistrée''
+                message: 'Echec ! La sélection n\'a pas pu être enregistrée'
                 },{
                     type: 'danger'
                 });
             updateTirage(resp);
+          },
+        });
+    }
+
+    // start a poller to request participants status as long as the tirage is OPEN
+    var pol = window.setInterval(pollTirage, 10000);
+    function pollTirage() {
+        if (tirage) {
+            $.get('../../rest/tirages/'+tirage.uuid+'/', function(resp) {
+                if (resp) {
+                    if (resp.etat == 'OPEN') {
+                        if (resp.participants.length != registeredParticipants.length) {
+                           updateTirage(resp);
+                        }
+                    } else {
+                        // CLOSE: Redirect to resultat.html
+                        window.location.href = "../../resultat/"+resp.uuid;
+                    }
+                }
+            }, 'json')
+        }
+    }
+
+    $('#btn-shuffle').click(doTirage);
+
+    function doTirage() {
+        $.ajax({
+          url: '../../rest/tirages/'+tirage.uuid+'/shuffle/',
+          type: "POST",
+          dataType: "json", // expected format for response
+          contentType: "application/json", // send as JSON
+          success: function(resp) {
+            // CLOSE: Redirect to resultat.html
+            window.location.href = "../../resultat/"+resp.uuid+'/';
+          },
+          error: function(resp) {
+            $.notify({message: 'Une erreur est survenue'}, {type: 'danger'});
           },
         });
     }
