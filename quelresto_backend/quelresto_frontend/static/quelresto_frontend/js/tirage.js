@@ -15,7 +15,7 @@ $(function() {
 
     function updateTirage(resp) {
         tirage = resp;
-        $('#p-name').text(tirage.uuid);
+        $('#p-name').text('Clé: '+tirage.code);
         $('#a-logout').text("Tirage initié par "+tirage.master);
         if (tirage.master_uuid == Cookies.get('participant')) {
             $('#pn-shuffle').show()
@@ -40,7 +40,7 @@ $(function() {
             registeredParticipants.push(part);
         });
         if (resp.etat == 'CLOSE') {
-            window.location.href = "../../resultat/"+resp.uuid+'/';
+            window.location.href = "/resultat/"+resp.code+'/';
         }
     }
 
@@ -66,7 +66,7 @@ $(function() {
         }
         // Envoi au serveur
         $.ajax({
-          url: '/rest/tirages/'+tirage.uuid+'/',
+          url: '/rest/tirages/'+tirage.code+'/',
           type: "POST",
           dataType: "json", // expected format for response
           contentType: "application/json", // send as JSON
@@ -94,7 +94,7 @@ $(function() {
     var pol = window.setInterval(pollTirage, 10000);
     function pollTirage() {
         if (tirage) {
-            $.get('/rest/tirages/'+tirage.uuid+'/', function(resp) {
+            $.get('/rest/tirages/'+tirage.code+'/', function(resp) {
                 if (resp) {
                     if (resp.etat == 'OPEN') {
                         if (resp.participants.length != registeredParticipants.length) {
@@ -102,7 +102,7 @@ $(function() {
                         }
                     } else {
                         // CLOSE: Redirect to resultat.html
-                        window.location.href = "/resultat/"+resp.uuid;
+                        window.location.href = "/resultat/"+resp.code;
                     }
                 }
             }, 'json')
@@ -113,13 +113,13 @@ $(function() {
 
     function doTirage() {
         $.ajax({
-          url: '/rest/tirages/'+tirage.uuid+'/shuffle/',
+          url: '/rest/tirages/'+tirage.code+'/shuffle/',
           type: "POST",
           dataType: "json", // expected format for response
           contentType: "application/json", // send as JSON
           success: function(resp) {
             // CLOSE: Redirect to resultat.html
-            window.location.href = "/resultat/"+resp.uuid+'/';
+            window.location.href = "/resultat/"+resp.code+'/';
           },
           error: function(resp) {
             $.notify({message: 'Une erreur est survenue'}, {type: 'danger'});

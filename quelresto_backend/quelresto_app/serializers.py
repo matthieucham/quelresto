@@ -45,6 +45,7 @@ class TirageEnCoursSerializer(serializers.ModelSerializer):
     participants = serializers.SerializerMethodField()
     selections = SelectionSerializer(many=True)
     uuid = serializers.UUIDField(read_only=True)
+    code = serializers.ReadOnlyField()
 
     def get_participants(self, value):
         votants = SelectionModel.objects.filter(tirage=value).values_list('participant__nom', flat=True)
@@ -69,7 +70,7 @@ class TirageEnCoursSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TirageModel
-        fields = ('uuid', 'etat', 'master', 'master_uuid', 'participants', 'selections')
+        fields = ('uuid', 'etat', 'master', 'master_uuid', 'participants', 'selections', 'code')
 
 
 class StatistiquesField(serializers.Field):
@@ -97,10 +98,11 @@ class TirageTermineSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
     choix = serializers.CharField(read_only=True)
     statistiques = StatistiquesField(read_only=True)
+    code = serializers.CharField(read_only=True)
 
     class Meta:
         model = TirageModel
-        fields = ('uuid', 'etat', 'choix', 'statistiques')
+        fields = ('uuid', 'etat', 'choix', 'statistiques', 'code')
 
 
 

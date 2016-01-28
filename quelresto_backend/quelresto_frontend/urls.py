@@ -4,8 +4,8 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
-    url(r'^tirage/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', views.tirage,
+    url(r'^tirage/(?P<code>[a-zA-Z0-9]{6})/$', views.tirage,
         name='tirage'),
-    url(r'^resultat/(?P<uuid>[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$', views.resultat,
+    url(r'^resultat/(?P<code>[a-zA-Z0-9]{6})/$', views.resultat,
         name='resultat'),
 ]

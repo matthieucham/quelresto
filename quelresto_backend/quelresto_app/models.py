@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.crypto import get_random_string
 import uuid
 
 
@@ -29,12 +30,15 @@ class TirageModel(models.Model):
     choix = models.CharField(max_length=100, null=True, blank=True)
     master = models.ForeignKey(ParticipantModel)
     uuid = models.UUIDField(unique=True)
+    code = models.CharField(max_length=6, unique=True)
 
     def save(self, *args, **kwargs):
         if not self.id:
             self.etat = 'OPEN'
             self.choix = None
             self.uuid = uuid.uuid4()
+            self.code = get_random_string(6)
+
         super(TirageModel, self).save(*args, **kwargs)
 
     def terminer(self, choix):

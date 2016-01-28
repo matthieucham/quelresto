@@ -5,7 +5,7 @@ $(function(){
 	/*********************************/
 	$('#btn-start-resto').click(function() {startResto()});
 
-	$('#fld-username').change(function() {
+	$('#fld-username').keyup(function() {
 	    if ($( this ).val().length > 0) {
 	        $('#btn-save-name').prop('disabled', false);
 	    } else {
@@ -13,7 +13,7 @@ $(function(){
 	    }
 	});
 
-    $('#fld-tiragekey').change(function() {
+    $('#fld-tiragekey').keyup(function() {
 	    if ($( this ).val().length > 0) {
 	        $('#btn-join-resto').prop('disabled', false);
 	    } else {
@@ -67,12 +67,21 @@ function fetchParticipant() {
         $('nav.navbar').hide();
     } else {
         // GET participant with that cookie
-        $.get("rest/participants/"+pUuid, function(resp){
-                $('#p-name').text("Bonjour "+resp.nom+". Il est ").append("<span id='time'></div>").append(" Bientôt l'heure de manger !");
-                $('#a-logout').text("Je ne suis pas "+resp.nom);
-                $('nav.navbar').show();
-                startTime();
-             }, 'json');
+        $.ajax({
+          url: 'rest/participants/'+pUuid+'/',
+          type: "GET",
+          dataType: "json", // expected format for response
+          success: function(resp) {
+            $('#p-name').text("Bonjour "+resp.nom+". Il est ").append("<span id='time'></div>").append(" Bientôt l'heure de manger !");
+            $('#a-logout').text("Je ne suis pas "+resp.nom);
+            $('nav.navbar').show();
+            startTime();
+          },
+          error: function(resp) {
+            Cookies.remove('participant');
+            $('nav.navbar').hide();
+          }
+        });
     }
 }
 
@@ -84,9 +93,9 @@ function launchTirage() {
       dataType: "json", // expected format for response
       contentType: "application/json", // send as JSON
       success: function(resp) {
-        var tirageUuid = resp.uuid;
+        var tirageUuid = resp.code;
         // Redirect to tirage.html
-        window.location.href = "tirage/"+tirageUuid;
+        window.location.href = "tirage/"+tirageUuid+'/';
       },
     });
 }

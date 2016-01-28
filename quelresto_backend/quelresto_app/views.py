@@ -49,12 +49,12 @@ class TirageDetail(viewsets.ModelViewSet):
     """
     queryset = models.TirageModel.objects.all()
     permission_classes = [permissions.IsMasterOrNoShuffle, permissions.IsRecognized]
-    lookup_field = 'uuid'
+    lookup_field = 'code'
 
     def get_serializer_class(self):
-        pk = self.kwargs.get('uuid')
+        pk = self.kwargs.get('code')
         # Selon l'état du tirage, on serialise différemment
-        tirage = models.TirageModel.objects.get(uuid=pk)
+        tirage = models.TirageModel.objects.get(code=pk)
         if tirage.etat == 'OPEN':
             return serializers.TirageEnCoursSerializer
         elif tirage.etat == 'CLOSE':
@@ -63,8 +63,8 @@ class TirageDetail(viewsets.ModelViewSet):
             raise RuntimeError('Le tirage %s est dans un état inconnu.' % pk)
 
     @detail_route(methods=['POST'])
-    def shuffle(self, request, uuid=None):
-        tirage = models.TirageModel.objects.get(uuid=uuid)
+    def shuffle(self, request, code=None):
+        tirage = models.TirageModel.objects.get(code=code)
         self.check_object_permissions(request, tirage)
         assert tirage.etat == 'OPEN', 'Le tirage a déjà eu lieu'
         # Tirer au sort parmi tous les choix
