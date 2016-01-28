@@ -3,12 +3,39 @@
 {% load static %}
 
 {% block top_content %}
+<input id="tid" type="hidden" value="{{ tid }}"/>
 <!-- Main jumbotron for a primary marketing message or call to action -->
-<div class="jumbotron" id="#resultat_jumbo">
+<div class="jumbotron" id="resultat_jumbo">
     <div class="container">
-        <h1>Quel resto ?</h1>
+        <h1></h1>
 
-        <p>L'éternelle question du midi</p>
+        <p>C'est là qu'on va.</p>
     </div>
 </div>
+{% endblock %}
+
+{% block container_content %}
+    <div class="row row-centered">
+        <div class="col-md-4 col-centered">
+            <div class="panel panel-default">
+                <div class="panel-heading">Composition du tirage au sort</div>
+                <div id="votes_body" class="panel-body">
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-centered">
+            <div class="panel panel-default">
+                <div class="panel-heading">Sélections</div>
+                <div id="stats_body" class="panel-body">
+
+                </div>
+            </div>
+        </div>
+    </div>
+{%  endblock %}
+
+{% block quelresto_body_js %}
+<script src="{% static 'quelresto_frontend/js/resultat.js' %}"></script>
 {% endblock %}

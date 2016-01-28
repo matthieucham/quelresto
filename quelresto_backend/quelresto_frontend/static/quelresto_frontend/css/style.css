@@ -16,7 +16,11 @@ body {
 }
 
 .jumbotron#resultat_jumbo {
-    background-image: url(../images/jakarta_blur.jpg);
+    background-image: url(../images/crowd_black.jpg);
+}
+
+.container {
+    padding: 0.8em;
 }
 
 #group-restos button{
@@ -74,8 +78,16 @@ body {
     color: #ffffff;
 }
 
-/*.btn-primary.outline:active, .btn-primary.outline.active {
-    border-color: #007299;
-    color: #007299;
-    box-shadow: none;
-}*/
+/* centered columns styles */
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}
+

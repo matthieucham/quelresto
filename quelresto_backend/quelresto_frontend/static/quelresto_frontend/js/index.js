@@ -13,16 +13,25 @@ $(function(){
 	    }
 	});
 
+    $('#fld-tiragekey').change(function() {
+	    if ($( this ).val().length > 0) {
+	        $('#btn-join-resto').prop('disabled', false);
+	    } else {
+	        $('#btn-join-resto').prop('disabled', true);
+	    }
+	});
+
 	$('#a-logout').click(function() {
 	    Cookies.remove('participant');
 	    fetchParticipant();
 	});
 
+    $('#btn-join-resto').click(function() {joinResto()});
+
     fetchParticipant();
 });
 
 function startResto() {
-    console.log('startResto');
     // vérifie si on a un cookie, si non on en créera un.
     var pUuid = Cookies.get('participant');
     if (pUuid == null) {
@@ -32,6 +41,20 @@ function startResto() {
 	    });
     } else {
         launchTirage();
+    }
+}
+
+function joinResto() {
+    console.log('joinResto');
+    // vérifie si on a un cookie, si non on en créera un.
+    var pUuid = Cookies.get('participant');
+    if (pUuid == null) {
+        $('#enterName').modal('show');
+        $('#btn-save-name').click(function() {
+	        createParticipant($('#fld-username').val(), false);
+	    });
+    } else {
+        joinTirage();
     }
 }
 
@@ -60,13 +83,17 @@ function launchTirage() {
       type: "POST",
       dataType: "json", // expected format for response
       contentType: "application/json", // send as JSON
-      //data: $.param( $("Element or Expression") ),
       success: function(resp) {
         var tirageUuid = resp.uuid;
         // Redirect to tirage.html
         window.location.href = "tirage/"+tirageUuid;
       },
     });
+}
+
+function joinTirage() {
+    // Rejoindre un tirage existant
+    window.location.href = "tirage/"+$('#fld-tiragekey').val().trim();
 }
 
 function createParticipant(name, startTirage) {
@@ -83,8 +110,9 @@ function createParticipant(name, startTirage) {
             launchTirage();
         } else {
             // Rejoindre un tirage
+            joinTirage();
         }
-      },
+      }
     });
     $('#enterName').modal('hide');
 }
