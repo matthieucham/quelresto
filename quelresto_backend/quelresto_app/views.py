@@ -1,4 +1,5 @@
 import random
+import operator
 
 from rest_framework import generics, viewsets
 from rest_framework.decorators import detail_route
@@ -72,6 +73,24 @@ class TirageDetail(viewsets.ModelViewSet):
         selections = models.SelectionModel.objects.filter(tirage=tirage).values_list('nom', flat=True)
         assert len(selections) > 0, 'Pas de sélections enregistrées dans ce tirage'
         choix = random.choice(selections)
+        tirage.terminer(choix)
+        serializer = serializers.TirageTermineSerializer(tirage)
+        return Response(serializer.data)
+
+    @detail_route(methods=['POST'])
+    def elect(self, request, code=None):
+        tirage = models.TirageModel.objects.get(code=code)
+        self.check_object_permissions(request, tirage)
+        assert tirage.etat == 'OPEN', 'Le tirage a déjà eu lieu'
+        # Désigner le choix qui a reçu le plus de voix
+        selections = models.SelectionModel.objects.filter(tirage=tirage)
+        assert len(selections) > 0, 'Pas de sélections enregistrées dans ce tirage'
+        by_nom = {}
+        for sel in selections:
+            if sel.nom not in by_nom:
+                by_nom[sel.nom] = 0
+            by_nom[sel.nom] += 1
+        choix = max(by_nom.items(), key=operator.itemgetter(1))[0]
         tirage.terminer(choix)
         serializer = serializers.TirageTermineSerializer(tirage)
         return Response(serializer.data)

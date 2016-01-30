@@ -109,11 +109,12 @@ $(function() {
         }
     }
 
-    $('#btn-shuffle').click(doTirage);
+    $('#btn-shuffle').click(function() {doTirage('shuffle')});
+    $('#btn-elect').click(function() {doTirage('elect')});
 
-    function doTirage() {
+    function doTirage(mode) {
         $.ajax({
-          url: '/rest/tirages/'+tirage.code+'/shuffle/',
+          url: '/rest/tirages/'+tirageId+'/'+mode+'/',
           type: "POST",
           dataType: "json", // expected format for response
           contentType: "application/json", // send as JSON
