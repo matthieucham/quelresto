@@ -1,3 +1,6 @@
 **/.idea
 **.sqlite3
 **/__pycache__
+.virtualenv
+
+.vscode/settings.json
