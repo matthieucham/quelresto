@@ -54,4 +54,3 @@ class SelectionModel(models.Model):
 
     class Meta:
         unique_together = ('participant', 'tirage', 'nom')
-

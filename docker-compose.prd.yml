@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+    nginx:
+        build: ./nginx
+        ports:
+          - 1337:80
+        volumes:
+            - static_volume:/home/quelresto/web/staticfiles
+        depends_on:
+          - web
+    web:
+        build: 
+            context: ./quelresto_backend
+            dockerfile: Dockerfile.prd
+        command: gunicorn quelresto.wsgi:application --bind 0.0.0.0:8000
+        volumes:
+            - static_volume:/home/quelresto/web/staticfiles
+        expose:
+            - 8000
+        env_file:
+            - ./.env.prd
+        depends_on:
+            - db
+    
+    db:
+        image: postgres:12.0-alpine
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/
+        env_file:
+            - ./.env.prd.db
+
+volumes:
+    postgres_data:
+    static_volume:

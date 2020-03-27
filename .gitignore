@@ -4,3 +4,7 @@
 .virtualenv
 
 .vscode/settings.json
+.env.prd
+.env.prd.db
+quelresto_backend/staticfiles/*
+

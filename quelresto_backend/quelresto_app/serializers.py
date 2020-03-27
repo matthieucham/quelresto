@@ -103,6 +103,3 @@ class TirageTermineSerializer(serializers.ModelSerializer):
     class Meta:
         model = TirageModel
         fields = ('uuid', 'etat', 'choix', 'statistiques', 'code')
-
-
-
