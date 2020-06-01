@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: App template for Quelresto
+
+Parameters:
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  VPCSourceSecurityGroupId:
+    Description: VPC SecurityGroup ID
+    Type: String
+  VPCSubnetID:
+    Description: ID of the private subnet that you want to provision the application
+      into (e.g., subnet-a0246dcd).
+    Type: 'AWS::EC2::Subnet::Id'
+  PrivateHostKeyPairName: 
+    Description: Amazon EC2 Key Pair
+    Type: "AWS::EC2::KeyPair::KeyName"
+
+Resources:
+  
+  PrivateHostSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          SourceSecurityGroupId: !Ref VPCSourceSecurityGroupId
+      Tags:
+        - Key: Name
+          Value: QuelrestoPrivateHostSG
+ 
+  PrivateHost:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0cb72d2e599cffbf9
+      InstanceType: t2.micro
+      KeyName: !Ref PrivateHostKeyPairName
+      SubnetId: !Ref VPCSubnetID
+      SecurityGroupIds: 
+        - !Ref PrivateHostSecurityGroup
+      Tags:
+        - Key: Name
+          Value: QuelrestoPrivateHost
+
+Outputs:
+
+  PrivateHostIPAddress:
+    Description: App host private IP
+    Value: !GetAtt PrivateHost.PrivateIp

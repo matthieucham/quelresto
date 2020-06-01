@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Master template for Quelresto
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPCCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+      - Label:
+          default: Bastion Configuration
+        Parameters:
+          - SSHRemoteAccessCIDR
+          - BastionKeyPairName
+      - Label:
+          default: ECS Cluster Configuration
+        Parameters:
+          - InstanceType
+          - MinClusterSize
+          - DesiredClusterSize
+          - MaxClusterSize
+          - ScalableMetricType
+          - ScalableMetricThreshold
+          - Cooldown
+      - Label:
+          default: RDS Configuration
+        Parameters:
+          - DBPort
+          - DBType
+          - DBVersion
+          - DBInstanceClass
+          - DBAllocatedStorage
+          - DBName
+          - DBUsername
+          - DBUserPassword
+
+    ParameterLabels:
+      VPCCIDR:
+        default: VPC CIDR
+      PublicSubnet1CIDR:
+        default: Public subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public subnet 2 CIDR
+      PrivateSubnet1CIDR:
+        default: Private subnet 1 CIDR
+      PrivateSubnet2CIDR:
+        default: Private subnet 2 CIDR
+      SSHRemoteAccessCIDR:
+        default: SSH remote address CIDR
+      BastionKeyPairName:
+        default: Bastion keypair name
+      DBPort:
+        default: DB Port
+      DBType:
+        default: DB type
+      DBVersion:
+        default: DB version
+      DBInstanceClass:
+        default: DB Instance class
+      DBAllocatedStorage:
+        default: DB allocated storage
+      DBName:
+        default: DB name
+      DBUsername:
+        default: DB username
+      DBUserPassword:
+        default: DB user password
+      InstanceType:
+        default: ECS Instance type
+      MinClusterSize:
+        default: Min cluster size
+      DesiredClusterSize:
+        default: Desired cluster size
+      MaxClusterSize:
+        default: Max cluster size
+      ScalableMetricType:
+        default: Scalable metric
+      ScalableMetricThreshold:
+        default: Scalable metric threshold
+      Cooldown:
+        default: Autoscaling cooldown
+
+Parameters:
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+  PublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.1.0/24
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone 1
+    Type: String
+  PublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.2.0/24
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone 2
+    Type: String
+  PrivateSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.10.0/24
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  PrivateSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.11.0/24
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+  SSHRemoteAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: Allowed CIDR block for external SSH access to the bastions
+    Type: String
+  BastionKeyPairName: 
+    Description: Amazon EC2 Key Pair
+    Type: "AWS::EC2::KeyPair::KeyName"
+    ConstraintDescription: must be a valid Key Pair
+  DBPort:
+    Type: String
+  DBType:
+    Type: String
+  DBVersion:
+    Type: String
+  DBInstanceClass:
+    Type: String
+  DBAllocatedStorage:
+    Type: String
+  DBName:
+    Type: String
+  DBUsername:
+    Type: String
+  DBUserPassword:
+    Type: String
+  InstanceType:
+    Type: String
+  MinClusterSize:
+    Type: String
+  DesiredClusterSize:
+    Type: String
+  MaxClusterSize:
+    Type: String
+  ScalableMetricType:
+    Type: String
+  ScalableMetricThreshold:
+    Type: String
+  Cooldown:
+    Type: String
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/vpc.yml
+      Parameters:
+        PrivateSubnet1CIDR: !Ref PrivateSubnet1CIDR
+        PrivateSubnet2CIDR: !Ref PrivateSubnet2CIDR
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
+        VPCCIDR: !Ref VPCCIDR
+  
+  BastionStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/bastion.yml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+        VPCSubnetID: !GetAtt VPCStack.Outputs.QuelrestoPublic1
+        SSHRemoteAccessCIDR: !Ref SSHRemoteAccessCIDR
+        BastionKeyPairName: !Ref BastionKeyPairName
+
+  ECSClusterStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/ecscluster.yml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+        DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+        DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
+        VPCSourceSecurityGroupId: !GetAtt BastionStack.Outputs.BastionSG
+        InstanceType: !Ref InstanceType
+        MinClusterSize: !Ref MinClusterSize
+        DesiredClusterSize: !Ref DesiredClusterSize
+        MaxClusterSize: !Ref MaxClusterSize
+        ScalableMetricType: !Ref ScalableMetricType
+        ScalableMetricThreshold: !Ref ScalableMetricThreshold
+        Cooldown: !Ref Cooldown
+
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/rds.yml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+        DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+        DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
+        ECSHostSecurityGroup: !GetAtt ECSClusterStack.Outputs.ECSHostSG
+        DBPort: !Ref DBPort
+        DBType: !Ref DBType
+        DBVersion: !Ref DBVersion
+        DBInstanceClass: !Ref DBInstanceClass
+        DBAllocatedStorage: !Ref DBAllocatedStorage
+        DBName: !Ref DBName
+        DBUsername: !Ref DBUsername
+        DBUserPassword: !Ref DBUserPassword
+        # DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+        # DBStorageEncryption: !Ref DBStorageEncryption
+        # AWSServiceRoleForRDSArn: !Ref AWSServiceRoleForRDSArn
+
+
+  EFSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/efs.yml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+        DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+        DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
+        ECSHostSecurityGroup: !GetAtt ECSClusterStack.Outputs.ECSHostSG
+
+
+  AppStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/app.yml
+      Parameters:
+        VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+        VPCSourceSecurityGroupId: !GetAtt BastionStack.Outputs.BastionSG
+        VPCSubnetID: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+        PrivateHostKeyPairName: !Ref BastionKeyPairName

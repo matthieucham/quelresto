@@ -1,0 +1,169 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Quelresto - RDS Stack -'
+
+Parameters:
+  # Global Variables
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  DataSubnetA:
+    Description: First data subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  DataSubnetB:
+    Description: Second data subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  ECSHostSecurityGroup:
+    Type: String
+
+  # Specific Variables
+  DBPort:
+    Description: RDS listening port number.
+    Type: Number
+
+  DBType:
+    Description: Database type (MySQL, PostgreSQL, ...)
+    Type: String
+    AllowedValues:
+    - aurora
+    - aurora-mysql
+    - aurora-postgresql
+    - mariadb
+    - mysql
+    - oracle-ee
+    - oracle-se2
+    - oracle-se1
+    - oracle-se
+    - postgres
+    - sqlserver-ee
+    - sqlserver-se
+    - sqlserver-ex
+    - sqlserver-web
+
+  DBVersion:
+    Description: Database version
+    Type: String
+
+  DBInstanceClass:
+    Description: Compute instance type.
+    Type: String
+    AllowedValues:
+    - db.t2.micro
+    - db.t2.small
+    - db.t1.micro
+    - db.t3.medium
+    - db.t3.small
+    - db.t2.large
+    - db.m1.small
+    - db.m1.medium
+    - db.m1.large
+    - db.m1.xlarge
+
+  DBAllocatedStorage:
+    Description: The size of the database (Gb)
+    Type: Number
+    MinValue: '5'
+    MaxValue: '200'
+    
+  DBName:
+    Description: RDS database name
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: True
+
+  DBUsername:
+    Description: DB username
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: True
+    
+  DBUserPassword:
+    Description: DB user password
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: True
+
+  # DBBackupRetentionPeriod:
+  #   Description: The number of backup to keep
+  #   Type: String
+
+  # DBStorageEncryption: 
+  #   Description : Indicates if the database is encrypted or not (with the default kms key)
+  #   Type: String
+
+  # AWSServiceRoleForRDSArn:
+  #   Type: String
+    
+Resources:
+
+  RDSAccessSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: !Sub "${AWS::StackName} RDS security group"
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Ref DBPort
+        ToPort: !Ref DBPort
+        SourceSecurityGroupId: !Ref ECSHostSecurityGroup
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 127.0.0.1/32
+
+  DBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupDescription: !Sub "Subnet group for ${AWS::StackName} RDS DB Instance"
+      SubnetIds:
+        - !Ref DataSubnetA
+        - !Ref DataSubnetB
+
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: F22
+            reason: "False positive"
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: !Ref AWS::StackName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBType
+      DBName: !Ref DBName
+      EngineVersion: !Ref DBVersion
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBUserPassword
+      # PubliclyAccessible: False
+      MultiAZ: True
+      # BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+      # PreferredBackupWindow: 02:00-04:00
+      PreferredMaintenanceWindow: Sun:01:00-Sun:02:00
+      Port: !Ref DBPort
+      # StorageEncrypted: !Ref DBStorageEncryption
+      # KmsKeyId: !GetAtt RDSKeyKMS.Arn
+      VPCSecurityGroups:
+      - !Ref RDSAccessSecurityGroup
+      # Tags:
+      #   - 
+      #     Key: "EnableBackup"
+      #     Value: true
+
+
+
+Outputs:
+  InstanceRDSName:
+    Description: DBInstance Name
+    Value: !Ref DBInstance
+
+  InstanceRDSHostname:
+    Description: DBInstance hostname
+    Value: !GetAtt DBInstance.Endpoint.Address
+
+  InstanceRDSPort:
+    Description: DBInstance port
+    Value: !GetAtt DBInstance.Endpoint.Port
+
+  DBSecurityGroup:
+    Description: DB RDSAccessSecurityGroup
+    Value: !Ref RDSAccessSecurityGroup

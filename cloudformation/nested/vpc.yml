@@ -1,0 +1,279 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC template for Quelresto
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPCCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+    ParameterLabels:
+      VPCCIDR:
+        default: VPC CIDR
+      PublicSubnet1CIDR:
+        default: Public subnet 1 CIDR
+      PublicSubnet2CIDR:
+        default: Public subnet 2 CIDR
+      PrivateSubnet1CIDR:
+        default: Private subnet 1 CIDR
+      PrivateSubnet2CIDR:
+        default: Private subnet 2 CIDR
+
+Parameters:
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.0.0/16
+    Description: CIDR Block for the VPC
+    Type: String
+  PublicSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.1.0/24
+    Description: CIDR Block for the public DMZ subnet 1 located in Availability Zone 1
+    Type: String
+  PublicSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.2.0/24
+    Description: CIDR Block for the public DMZ subnet 2 located in Availability Zone 2
+    Type: String
+  PrivateSubnet1CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.10.0/24
+    Description: CIDR block for private subnet 1 located in Availability Zone 1
+    Type: String
+  PrivateSubnet2CIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: Must be a valid IP range in x.x.x.x/x notation
+    Default: 10.0.11.0/24
+    Description: CIDR block for private subnet 2 located in Availability Zone 2
+    Type: String
+
+Resources:
+  quelrestoVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: True
+      InstanceTenancy: "default"
+      Tags:
+        - Key: Name
+          Value: "Quelresto"
+  
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties: 
+      Tags:
+        - Key: Name
+          Value: "Quelresto"
+
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGW:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - EIP
+          - AllocationId
+      SubnetId: !Ref VPCPublicSubnet1
+      Tags:
+        - Key: Name
+          Value: "Quelresto"
+  
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref quelrestoVPC
+
+  VPCPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref PublicSubnet1CIDR
+      AvailabilityZone: 
+        Fn::Select: 
+          - 0
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "QuelrestoPub1"
+      VpcId: !Ref quelrestoVPC
+  
+  VPCPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref PublicSubnet2CIDR
+      AvailabilityZone: 
+        Fn::Select: 
+          - 1
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "QuelrestoPub2"
+      VpcId: !Ref quelrestoVPC
+  
+  VPCPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      AvailabilityZone: 
+        Fn::Select: 
+          - 0
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "QuelrestoPriv1"
+      VpcId: !Ref quelrestoVPC
+  
+  VPCPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      AvailabilityZone: 
+        Fn::Select: 
+          - 1
+          - Fn::GetAZs: ""
+      Tags:
+        - Key: Name
+          Value: "QuelrestoPriv2"
+      VpcId: !Ref quelrestoVPC
+  
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref quelrestoVPC
+      Tags:
+        - Key: Name
+          Value: QuelrestoPubRT
+  
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref IGW
+      RouteTableId: !Ref PublicRouteTable
+  
+  PublicRouteSubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref VPCPublicSubnet1
+  
+  PublicRouteSubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref VPCPublicSubnet2
+  
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref quelrestoVPC
+      Tags:
+        - Key: Name
+          Value: QuelrestoPrivRT 
+ 
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref NatGW
+      RouteTableId: !Ref PrivateRouteTable
+ 
+  PrivateRouteSubnetAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref VPCPrivateSubnet1
+ 
+  PrivateRouteSubnetAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref VPCPrivateSubnet2
+  
+  # BastionSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     VpcId: !Ref quelrestoVPC
+  #     GroupDescription: Enable SSH access via port 22
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '22'
+  #         ToPort: '22'
+  #         CidrIp: !Ref SSHRemoteAccessCIDR
+  #     Tags:
+  #       - Key: Name
+  #         Value: ProjectXBastionSG
+
+  # BastionHost:
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     ImageId: ami-0cb72d2e599cffbf9
+  #     InstanceType: t2.micro
+  #     KeyName: !Ref BastionKeyPairName
+  #     SubnetId: !Ref VPCPublicSubnet1
+  #     SecurityGroupIds: 
+  #       - !Ref BastionSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: QuelrestoBastionHost
+  
+  # PrivateHostSecurityGroup:
+  #   Type: 'AWS::EC2::SecurityGroup'
+  #   Properties:
+  #     VpcId: !Ref quelrestoVPC
+  #     GroupDescription: Enable SSH access via port 22
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '22'
+  #         ToPort: '22'
+  #         SourceSecurityGroupId: !Ref BastionSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: QuelrestoPrivateHostSG
+ 
+  # PrivateHost:
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     ImageId: ami-0cb72d2e599cffbf9
+  #     InstanceType: t2.micro
+  #     KeyName: !Ref BastionKeyPairName
+  #     SubnetId: !Ref VPCPrivateSubnet1
+  #     SecurityGroupIds: 
+  #       - !Ref PrivateHostSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: QuelrestoPrivateHost
+
+
+Outputs:
+  QuelrestoVPCID:
+    Description: "VPC Id"
+    Value: !Ref quelrestoVPC
+  QuelrestoPublic1:
+    Description: Public Subnet1
+    Value: !Ref VPCPublicSubnet1
+  QuelrestoPublic2:
+    Description: Public Subnet 2
+    Value: !Ref VPCPublicSubnet2
+  QuelrestoPrivate1:
+    Description: Private Subnet1
+    Value: !Ref VPCPrivateSubnet1
+  QuelrestoPrivate2:
+    Description: Private Subnet 2
+    Value: !Ref VPCPrivateSubnet2

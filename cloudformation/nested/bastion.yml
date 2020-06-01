@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC template for Quelresto
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Bastion Configuration
+        Parameters:
+          - SSHRemoteAccessCIDR
+          - BastionKeyPairName
+    ParameterLabels:
+      SSHRemoteAccessCIDR:
+        default: SSH remote address CIDR
+      BastionKeyPairName:
+        default: Bastion keypair name
+
+Parameters:
+  SSHRemoteAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: Allowed CIDR block for external SSH access to the bastions
+    Type: String
+  BastionKeyPairName: 
+    Description: Amazon EC2 Key Pair
+    Type: "AWS::EC2::KeyPair::KeyName"
+    ConstraintDescription: must be a valid Key Pair
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  VPCSubnetID:
+    Description: ID of the public subnet that you want to provision the first bastion
+      into (e.g., subnet-a0246dcd).
+    Type: 'AWS::EC2::Subnet::Id'
+
+Resources:
+  BastionSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHRemoteAccessCIDR
+      Tags:
+        - Key: Name
+          Value: QuelrestoBastionSG
+
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0cb72d2e599cffbf9
+      InstanceType: t2.micro
+      KeyName: !Ref BastionKeyPairName
+      SubnetId: !Ref VPCSubnetID
+      SecurityGroupIds: 
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: QuelrestoBastionHost
+
+
+Outputs:
+  BastionHostDNS:
+    Description: Bastion host public DNS
+    Value: !GetAtt BastionHost.PublicDnsName
+  BastionPublicIPAddress:
+    Description: Bastion host public IP
+    Value: !GetAtt BastionHost.PublicIp
+  BastionSG:
+    Description: Bastion security group
+    Value: !Ref BastionSecurityGroup

@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EFS Stack -'
+Parameters:
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  DataSubnetA:
+    Description: First data subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  DataSubnetB:
+    Description: Second data subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  ECSHostSecurityGroup:
+    Type: String
+
+Resources:
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref ECSHostSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          CidrIp: 0.0.0.0/0
+
+          
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+        - Key: "Project"
+          Value: "Quelresto"
+
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SecurityGroups:
+        - Ref: MountTargetSecurityGroup
+      SubnetId: !Ref DataSubnetA
+
+
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SecurityGroups:
+        - Ref: MountTargetSecurityGroup
+      SubnetId: !Ref DataSubnetB
+
+   
+Outputs:
+  EfsId:
+    Value: !Ref FileSystem
+

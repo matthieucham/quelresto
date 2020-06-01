@@ -1,0 +1,276 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: ECS Cluster Stack
+
+Parameters:
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  VPCSourceSecurityGroupId:
+    Description: Source SG ID
+    Type: "String"
+  AppSubnetA:
+    Description: First subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  AppSubnetB:
+    Description: Second subnet
+    Type: 'AWS::EC2::Subnet::Id'
+
+  # Specific Variables
+  InstanceType:
+    Description: Which instance type should we use to build the ECS cluster?
+    Type: String
+  MinClusterSize:
+    Description: How many members in cluster do u need (minimum) ?
+    Type: Number
+  DesiredClusterSize:
+    Description: How many members in cluster do u need (desired) ?
+    Type: Number
+  MaxClusterSize:
+    Description: How many members in cluster do u need (maximum) ?
+    Type: Number
+  ScalableMetricType:
+    Description: What kind of metric for the cluster scalability ?
+    Type: String
+  ScalableMetricThreshold:
+    Description: What is the value for threshold for the cluster scalability ?
+    Type: String
+  Cooldown:
+    Description: What is the value for the cooldown in scaling up or down ?
+    Type: String
+  ECSAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
+
+Resources:
+
+  ECSHostSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          SourceSecurityGroupId: !Ref VPCSourceSecurityGroupId
+      SecurityGroupEgress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: 'tcp'
+          FromPort: 0
+          ToPort: 65535
+      Tags:
+        - Key: Name
+          Value: QuelrestoECSHostSG
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${AWS::StackName}-ECSCluster"
+
+  ECSAutoScalingUp:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref ECSAutoScalingGroup
+      Cooldown: !Ref Cooldown
+      ScalingAdjustment: 1
+
+  ECSAutoScalingDown:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref ECSAutoScalingGroup
+      Cooldown: !Ref Cooldown
+      ScalingAdjustment: -1
+
+  ECSWAlarmHighMemoryReservation:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 1
+      Statistic: Average
+      Threshold: !Ref ScalableMetricThreshold
+      AlarmDescription: Alarm if MemoryReservation is high
+      Period: 60
+      AlarmActions:
+      - !Ref ECSAutoScalingUp
+      Namespace: AWS/ECS
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref ECSAutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: !Ref ScalableMetricType
+
+  ECSAlarmLowMemoryReservation:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: 1
+      Statistic: Average
+      Threshold: !Ref ScalableMetricThreshold
+      AlarmDescription: Alarm if MemoryReservation is low
+      Period: 60
+      AlarmActions:
+      - !Ref ECSAutoScalingDown
+      Namespace: AWS/ECS
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: !Ref ECSAutoScalingGroup
+      ComparisonOperator: LessThanThreshold
+      MetricName: !Ref ScalableMetricType
+
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref AppSubnetA
+        - !Ref AppSubnetB
+      LaunchConfigurationName: !Ref ECSLaunchConfiguration
+      MinSize: !Ref MinClusterSize
+      MaxSize: !Ref MaxClusterSize
+      DesiredCapacity: !Ref DesiredClusterSize
+      Tags:
+        -
+          Key: Name
+          Value: !Sub "Quelresto ECS Host"
+          PropagateAtLaunch: true
+        - Key: ApplyPatch
+          Value: 'true'
+          PropagateAtLaunch: true
+        - Key: UpdateSSMAgent
+          Value: 'true'
+          PropagateAtLaunch: true
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+        WaitOnResourceSignals: true
+
+  ECSLaunchConfiguration:
+      Type: AWS::AutoScaling::LaunchConfiguration
+      Properties:
+        ImageId: !Ref ECSAMI
+        InstanceType: !Ref InstanceType
+        SecurityGroups: 
+          - !Ref ECSHostSecurityGroup
+        UserData:
+          "Fn::Base64": !Sub |
+              #!/bin/bash
+              yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+              yum install -y aws-cfn-bootstrap hibagent
+              /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+              /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+              /usr/bin/enable-ec2-spot-hibernation
+              echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+              echo vm.max_map_count=262144 >> /etc/sysctl.conf
+              sysctl -w vm.max_map_count=262144
+      Metadata:
+            AWS::CloudFormation::Init:
+                config:
+                    packages:
+                        yum:
+                            awslogs: []
+
+                    commands:
+                        01_add_instance_to_cluster:
+                            command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+                    files:
+                        "/etc/cfn/cfn-hup.conf":
+                            mode: 000400
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                [main]
+                                stack=${AWS::StackId}
+                                region=${AWS::Region}
+                        "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+                            content: !Sub |
+                                [cfn-auto-reloader-hook]
+                                triggers=post.update
+                                path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
+                                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                        "/etc/awslogs/awscli.conf":
+                            content: !Sub |
+                                [plugins]
+                                cwlogs = cwlogs
+                                [default]
+                                region = ${AWS::Region}
+                        "/etc/awslogs/awslogs.conf":
+                            content: !Sub |
+                                [general]
+                                state_file = /var/lib/awslogs/agent-state
+                                [/var/log/dmesg]
+                                file = /var/log/dmesg
+                                log_group_name = ${ECSCluster}-/var/log/dmesg
+                                log_stream_name = ${ECSCluster}
+                                [/var/log/messages]
+                                file = /var/log/messages
+                                log_group_name = ${ECSCluster}-/var/log/messages
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %b %d %H:%M:%S
+                                [/var/log/docker]
+                                file = /var/log/docker
+                                log_group_name = ${ECSCluster}-/var/log/docker
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %Y-%m-%dT%H:%M:%S.%f
+                                [/var/log/ecs/ecs-init.log]
+                                file = /var/log/ecs/ecs-init.log.*
+                                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-init.log
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %Y-%m-%dT%H:%M:%SZ
+                                [/var/log/ecs/ecs-agent.log]
+                                file = /var/log/ecs/ecs-agent.log.*
+                                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-agent.log
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %Y-%m-%dT%H:%M:%SZ
+                                [/var/log/ecs/audit.log]
+                                file = /var/log/ecs/audit.log.*
+                                log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %Y-%m-%dT%H:%M:%SZ
+                    services:
+                        sysvinit:
+                            cfn-hup:
+                                enabled: true
+                                ensureRunning: true
+                                files:
+                                    - /etc/cfn/cfn-hup.conf
+                                    - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+                            awslogs:
+                                enabled: true
+                                ensureRunning: true
+                                files:
+                                    - /etc/awslogs/awslogs.conf
+                                    - /etc/awslogs/awscli.conf
+
+Outputs:
+
+  ClusterName:
+    Description: A reference to the ECS cluster
+    Value: !Ref ECSCluster
+
+  ClusterArn:
+    Description: A reference to the ECS cluster
+    Value: !GetAtt ECSCluster.Arn
+
+  ECSServiceAutoScalingRole:
+    Description: A reference to ECS service auto scaling role
+    Value: !GetAtt ECSServiceAutoScalingRole.Arn
+
+  ECSAutoScalingGroupName:
+    Description: A reference to ECS AutoScaling Group Name
+    Value: !Ref ECSAutoScalingGroup
+  
+  ECSHostSG:
+    Description: ECS Host security group
+    Value: !Ref ECSHostSecurityGroup
