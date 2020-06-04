@@ -1,0 +1,89 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Sonarqube - Application Load Balancer Stack -'
+
+# ============================== Parameters ===========================#
+
+Parameters:
+  VPCID:
+    Description: VPC ID
+    Type: "AWS::EC2::VPC::Id"
+  PublicSubnetA:
+    Description: First subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  PublicSubnetB:
+    Description: Second subnet
+    Type: 'AWS::EC2::Subnet::Id'
+  ECSHostSecurityGroup:
+    Type: String
+
+# ============================== Resources ===========================#
+Resources:
+ 
+  ALBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Allow all inbound traffic on the load balancer listener port
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: 'tcp'
+          FromPort: 443
+          ToPort: 443
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: 'tcp'
+          FromPort: 80
+          ToPort: 80
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          FromPort: 0
+          ToPort: 0
+          DestinationSecurityGroupId: !Ref ECSHostSecurityGroup
+      Tags:
+        - Key: Name
+          Value: QuelrestoALBSG
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: Quelresto-ALB
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  ApplicationLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: 
+        - Type: forward
+          TargetGroupArn: !Ref DefaultTargetGroup
+    
+  DefaultTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: QuelrestoTargetGroup
+      VpcId: !Ref VPCID
+      Port: 80
+      Protocol: HTTP
+   
+
+Outputs:
+  ApplicationLoadBalancer:
+    Description: A reference to the Application Load Balancer
+    Value: !Ref ApplicationLoadBalancer
+
+  ApplicationLoadBalancerUrl:
+    Description: The URL of the ALB
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+
+  ListenerArn:
+    Description: A reference to a port 80 listener
+    Value: !Ref ApplicationLoadBalancerListener  
+

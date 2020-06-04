@@ -80,6 +80,7 @@ Resources:
     Properties:
       Domain: vpc
 
+  # la NATGW est facturée
   NatGW:
     Type: AWS::EC2::NatGateway
     Properties:

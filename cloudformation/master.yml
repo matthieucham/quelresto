@@ -155,6 +155,26 @@ Parameters:
     Type: String
   Cooldown:
     Type: String
+  URIDockerImageNginx:
+    Type: String
+  URIDockerImageWeb:
+    Type: String
+  LBPriority:
+    Type: String
+  ScaleOutCooldown:
+    Type: String
+  MaxInstanceCount:
+    Type: String
+  ScaleTriggerType:
+    Type: String
+  ScaleTriggerThreshold:
+    Type: String
+  ScaleInCooldown:
+    Type: String
+  MinInstanceCount:
+    Type: String
+  DesiredInstanceCount:
+    Type: String
 
 Resources:
   VPCStack:
@@ -184,8 +204,8 @@ Resources:
       TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/ecscluster.yml
       Parameters:
         VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
-        DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
-        DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
+        AppSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+        AppSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
         VPCSourceSecurityGroupId: !GetAtt BastionStack.Outputs.BastionSG
         InstanceType: !Ref InstanceType
         MinClusterSize: !Ref MinClusterSize
@@ -217,23 +237,59 @@ Resources:
         # AWSServiceRoleForRDSArn: !Ref AWSServiceRoleForRDSArn
 
 
-  EFSStack:
+  # EFSStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/efs.yml
+  #     Parameters:
+  #       VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+  #       DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+  #       DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
+  #       ECSHostSecurityGroup: !GetAtt ECSClusterStack.Outputs.ECSHostSG
+
+  ALBStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/efs.yml
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/alb.yml
       Parameters:
         VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
-        DataSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
-        DataSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPrivate2
         ECSHostSecurityGroup: !GetAtt ECSClusterStack.Outputs.ECSHostSG
+        PublicSubnetA: !GetAtt VPCStack.Outputs.QuelrestoPublic1
+        PublicSubnetB: !GetAtt VPCStack.Outputs.QuelrestoPublic2
 
+  # AppStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/app.yml
+  #     Parameters:
+  #       VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
+  #       VPCSourceSecurityGroupId: !GetAtt BastionStack.Outputs.BastionSG
+  #       VPCSubnetID: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
+  #       PrivateHostKeyPairName: !Ref BastionKeyPairName
 
-  AppStack:
+  ServiceStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/app.yml
+      TemplateURL: https://quelresto-cf-nested.s3.eu-west-3.amazonaws.com/service.yml
       Parameters:
         VPCID: !GetAtt VPCStack.Outputs.QuelrestoVPCID
-        VPCSourceSecurityGroupId: !GetAtt BastionStack.Outputs.BastionSG
-        VPCSubnetID: !GetAtt VPCStack.Outputs.QuelrestoPrivate1
-        PrivateHostKeyPairName: !Ref BastionKeyPairName
+        URIDockerImageNginx: !Ref URIDockerImageNginx
+        URIDockerImageWeb: !Ref URIDockerImageWeb
+        MinInstanceCount: !Ref MinInstanceCount
+        DesiredInstanceCount: !Ref DesiredInstanceCount
+        MaxInstanceCount: !Ref MaxInstanceCount
+        ScaleInCooldown: !Ref ScaleInCooldown
+        ScaleOutCooldown: !Ref ScaleOutCooldown
+        ScaleTriggerType: !Ref ScaleTriggerType
+        ScaleTriggerThreshold: !Ref ScaleTriggerThreshold
+        LBPriority: !Ref LBPriority
+        DBName: !Ref DBName
+        DBUsername: !Ref DBUsername
+        DBUserPassword: !Ref DBUserPassword
+        ClusterName: !GetAtt ECSClusterStack.Outputs.ClusterName
+        ListenerArn: !GetAtt ALBStack.Outputs.ListenerArn
+        ECSHostSecurityGroup: !GetAtt ECSClusterStack.Outputs.ECSHostSG
+        InstanceRDSHostname: !GetAtt RDSStack.Outputs.InstanceRDSHostname
+        InstanceRDSPort: !GetAtt RDSStack.Outputs.InstanceRDSPort
+
+

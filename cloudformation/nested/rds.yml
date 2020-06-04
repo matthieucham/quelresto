@@ -109,6 +109,7 @@ Resources:
         ToPort: 80
         CidrIp: 127.0.0.1/32
 
+  # le déploiement multi-AZ est facturé
   DBSubnetGroup:
     Type: 'AWS::RDS::DBSubnetGroup'
     Properties:
